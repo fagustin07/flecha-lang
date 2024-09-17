@@ -178,6 +178,6 @@ func StringifyTokenKind(tokenKind TokenKind) string {
 		return "in"
 
 	default:
-		return fmt.Sprintf("unknow token (%d)", tokenKind)
+		return fmt.Sprintf("unknown token (%d)", tokenKind)
 	}
 }

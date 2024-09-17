@@ -17,6 +17,7 @@ type tokenizer struct {
 	Tokens   []Token
 	source   string
 	pos      int
+	line     int
 }
 
 func (tok *tokenizer) advanceN(n int) {
@@ -62,13 +63,18 @@ func Exec(source string) []Token {
 func initTokenizer(source string) *tokenizer {
 	return &tokenizer{
 		pos:    0,
+		line:   1,
 		source: source,
 		Tokens: make([]Token, 0),
 		patterns: []regexPattern{
 			{regexp.MustCompile(`[0-9]+`), numberHandler},
+			{regexp.MustCompile(`"[^"]*"`), stringHandler},
+			{regexp.MustCompile(`'[^']'`), charHandler},
+			{regexp.MustCompile(`--.*`), commentHandler},
+			{regexp.MustCompile(`\s+`), ignoreHandler},
+
 			{regexp.MustCompile(`[a-z][_a-zA-Z0-9]*`), identifierHandler(LOWERID)},
 			{regexp.MustCompile(`[A-Z][_a-zA-Z0-9]*`), identifierHandler(UPPERID)},
-			{regexp.MustCompile(`\s+`), ignoreHandler},
 			{regexp.MustCompile(`==`), defaultHandler(EQ, "==")},
 			{regexp.MustCompile(`=`), defaultHandler(DEFEQ, "=")},
 			{regexp.MustCompile(`;`), defaultHandler(SEMICOLON, ";")},
@@ -123,5 +129,25 @@ func identifierHandler(kind TokenKind) regexHandler {
 		match := regex.FindString(tok.remainder())
 		tok.push(NewToken(kind, match))
 		tok.advanceN(len(match))
+	}
+}
+
+func charHandler(tok *tokenizer, regex *regexp.Regexp) {
+	match := regex.FindString(tok.remainder())
+	tok.push(NewToken(CHAR, match[1:len(match)-1]))
+	tok.advanceN(len(match))
+}
+
+func stringHandler(tok *tokenizer, regex *regexp.Regexp) {
+	match := regex.FindString(tok.remainder())
+	tok.push(NewToken(STRING, match[1:len(match)-1]))
+	tok.advanceN(len(match))
+}
+
+func commentHandler(tok *tokenizer, regex *regexp.Regexp) {
+	match := regex.FindStringIndex(tok.remainder())
+	if match != nil {
+		tok.advanceN(match[1])
+		tok.line++
 	}
 }
