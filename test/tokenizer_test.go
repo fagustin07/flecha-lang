@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	"github.com/fagustin07/flecha-lang/src/tokenizer"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test01_TokenizerCanReceivedProgramsWithArithmeticExpressionsToGenerateTokens(t *testing.T) {
+func Test01_TokenizerRecognizeArithmeticOperations(t *testing.T) {
 	source := `123+ (456*789);`
 
 	tokens := tokenizer.Exec(source)
@@ -23,9 +24,7 @@ func Test01_TokenizerCanReceivedProgramsWithArithmeticExpressionsToGenerateToken
 		{Kind: tokenizer.EOF, Value: "EOF"},
 	}
 
-	if !compareTokens(tokens, expectedTokens) {
-		t.Errorf("Expected tokens: %v, got: %v", expectedTokens, tokens)
-	}
+	assert.Equal(t, expectedTokens, tokens)
 }
 
 func Test02_TokenizerRecognizeIdentifiers(t *testing.T) {
@@ -40,9 +39,7 @@ func Test02_TokenizerRecognizeIdentifiers(t *testing.T) {
 		{Kind: tokenizer.EOF, Value: "EOF"},
 	}
 
-	if !compareTokens(tokens, expectedTokens) {
-		t.Errorf("Expected tokens: %v, got: %v", expectedTokens, tokens)
-	}
+	assert.Equal(t, expectedTokens, tokens)
 }
 
 func Test03_TokenizerIgnoreComments(t *testing.T) {
@@ -54,12 +51,10 @@ func Test03_TokenizerIgnoreComments(t *testing.T) {
 		{Kind: tokenizer.EOF, Value: "EOF"},
 	}
 
-	if !compareTokens(tokens, expectedTokens) {
-		t.Errorf("Expected tokens: %v, got: %v", expectedTokens, tokens)
-	}
+	assert.Equal(t, expectedTokens, tokens)
 }
 
-func Test04_TokenizerIgnoreWhitespaces(t *testing.T) {
+func Test04_TokenizerIgnoresEveryWhitespaceKind(t *testing.T) {
 	source := "\r123 +	 456  * \n  \t789 ;"
 
 	tokens := tokenizer.Exec(source)
@@ -74,12 +69,10 @@ func Test04_TokenizerIgnoreWhitespaces(t *testing.T) {
 		{Kind: tokenizer.EOF, Value: "EOF"},
 	}
 
-	if !compareTokens(tokens, expectedTokens) {
-		t.Errorf("Expected tokens: %v, got: %v", expectedTokens, tokens)
-	}
+	assert.Equal(t, expectedTokens, tokens)
 }
 
-func Test05_TokenizerKnowsHowToRecognizeStringsAndChars(t *testing.T) {
+func Test05_TokenizerRecognizeStringsAndChars(t *testing.T) {
 	source := `"hola como estas"; '!'`
 	tokens := tokenizer.Exec(source)
 
@@ -90,21 +83,5 @@ func Test05_TokenizerKnowsHowToRecognizeStringsAndChars(t *testing.T) {
 		{Kind: tokenizer.EOF, Value: "EOF"},
 	}
 
-	if !compareTokens(tokens, expectedTokens) {
-		t.Errorf("Expected tokens: %v, got: %v", expectedTokens, tokens)
-	}
-}
-
-func compareTokens(actual, expected []tokenizer.Token) bool {
-	if len(actual) != len(expected) {
-		return false
-	}
-
-	for i := range actual {
-		if actual[i] != expected[i] {
-			return false
-		}
-	}
-
-	return true
+	assert.Equal(t, expectedTokens, tokens)
 }

@@ -67,36 +67,36 @@ func initTokenizer(source string) *tokenizer {
 		source: source,
 		Tokens: make([]Token, 0),
 		patterns: []regexPattern{
+			// LITERALES
 			{regexp.MustCompile(`[0-9]+`), numberHandler},
 			{regexp.MustCompile(`"[^"]*"`), stringHandler},
 			{regexp.MustCompile(`'[^']'`), charHandler},
+
+			// PALABRAS QUE NO SON TOKENS
 			{regexp.MustCompile(`--.*`), commentHandler},
 			{regexp.MustCompile(`\s+`), ignoreHandler},
 
+			// IDENTIFICADORES
 			{regexp.MustCompile(`[a-z][_a-zA-Z0-9]*`), identifierHandler(LOWERID)},
 			{regexp.MustCompile(`[A-Z][_a-zA-Z0-9]*`), identifierHandler(UPPERID)},
+
+			// SIMBOLOS
 			{regexp.MustCompile(`==`), defaultHandler(EQ, "==")},
 			{regexp.MustCompile(`=`), defaultHandler(DEFEQ, "=")},
 			{regexp.MustCompile(`;`), defaultHandler(SEMICOLON, ";")},
 			{regexp.MustCompile(`\(`), defaultHandler(LPAREN, "(")},
 			{regexp.MustCompile(`\)`), defaultHandler(RPAREN, ")")},
-
 			{regexp.MustCompile(`\\`), defaultHandler(LAMBDA, "\\")},
-
 			{regexp.MustCompile(`\|\|`), defaultHandler(OR, "||")},
 			{regexp.MustCompile(`\|`), defaultHandler(PIPE, "|")},
 			{regexp.MustCompile(`&&`), defaultHandler(AND, "&&")},
-
 			{regexp.MustCompile(`!=`), defaultHandler(NE, "!=")},
 			{regexp.MustCompile(`!`), defaultHandler(NOT, "!")},
-
 			{regexp.MustCompile(`->`), defaultHandler(ARROW, "->")},
-
 			{regexp.MustCompile(`>=`), defaultHandler(GE, ">=")},
 			{regexp.MustCompile(`<=`), defaultHandler(LE, "<=")},
 			{regexp.MustCompile(`>`), defaultHandler(GT, ">")},
 			{regexp.MustCompile(`<`), defaultHandler(LT, "<")},
-
 			{regexp.MustCompile(`\+`), defaultHandler(PLUS, "+")},
 			{regexp.MustCompile(`-`), defaultHandler(MINUS, "-")},
 			{regexp.MustCompile(`\*`), defaultHandler(TIMES, "*")},
