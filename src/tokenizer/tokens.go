@@ -76,6 +76,17 @@ type Token struct {
 	Value string
 }
 
+var reserved_keywords map[string]TokenKind = map[string]TokenKind{
+	"def":  DEF,
+	"if":   IF,
+	"then": THEN,
+	"else": ELSE,
+	"elif": ELIF,
+	"case": CASE,
+	"let":  LET,
+	"in":   IN,
+}
+
 func NewToken(kind TokenKind, value string) Token {
 	return Token{
 		kind,

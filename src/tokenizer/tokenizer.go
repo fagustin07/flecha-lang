@@ -3,6 +3,7 @@ package tokenizer
 import (
 	"fmt"
 	"regexp"
+	"unicode"
 )
 
 type regexHandler func(tok *tokenizer, regex *regexp.Regexp)
@@ -75,10 +76,8 @@ func initTokenizer(source string) *tokenizer {
 			// PALABRAS QUE NO SON TOKENS
 			{regexp.MustCompile(`--.*`), commentHandler},
 			{regexp.MustCompile(`\s+`), ignoreHandler},
-
 			// IDENTIFICADORES
-			{regexp.MustCompile(`[a-z][_a-zA-Z0-9]*`), identifierHandler(LOWERID)},
-			{regexp.MustCompile(`[A-Z][_a-zA-Z0-9]*`), identifierHandler(UPPERID)},
+			{regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9_]*`), wordsHandler},
 
 			// SIMBOLOS
 			{regexp.MustCompile(`==`), defaultHandler(EQ, "==")},
@@ -124,14 +123,6 @@ func ignoreHandler(tok *tokenizer, regex *regexp.Regexp) {
 	tok.advanceN(match[1])
 }
 
-func identifierHandler(kind TokenKind) regexHandler {
-	return func(tok *tokenizer, regex *regexp.Regexp) {
-		match := regex.FindString(tok.remainder())
-		tok.push(NewToken(kind, match))
-		tok.advanceN(len(match))
-	}
-}
-
 func charHandler(tok *tokenizer, regex *regexp.Regexp) {
 	match := regex.FindString(tok.remainder())
 	tok.push(NewToken(CHAR, match[1:len(match)-1]))
@@ -150,4 +141,19 @@ func commentHandler(tok *tokenizer, regex *regexp.Regexp) {
 		tok.advanceN(match[1])
 		tok.line++
 	}
+}
+
+func wordsHandler(tok *tokenizer, regex *regexp.Regexp) {
+	value := regex.FindString(tok.remainder())
+	if kind, exists := reserved_keywords[value]; exists {
+		tok.push(NewToken(kind, value))
+	} else {
+		if firstChar := rune(value[0]); unicode.IsUpper(firstChar) {
+			tok.push(NewToken(UPPERID, value))
+		} else {
+			tok.push(NewToken(LOWERID, value))
+		}
+	}
+
+	tok.advanceN(len(value))
 }

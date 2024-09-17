@@ -85,3 +85,59 @@ func Test05_TokenizerRecognizeStringsAndChars(t *testing.T) {
 
 	assert.Equal(t, expectedTokens, tokens)
 }
+
+func Test06_TokenizerRecognizeLambdaFunctions(t *testing.T) {
+	source := `\z -> z 2`
+
+	tokens := tokenizer.Exec(source)
+
+	expectedTokens := []tokenizer.Token{
+		{Kind: tokenizer.LAMBDA, Value: "\\"},
+		{Kind: tokenizer.LOWERID, Value: "z"},
+		{Kind: tokenizer.ARROW, Value: "->"},
+		{Kind: tokenizer.LOWERID, Value: "z"},
+		{Kind: tokenizer.NUMBER, Value: "2"},
+		{Kind: tokenizer.EOF, Value: "EOF"},
+	}
+
+	assert.Equal(t, expectedTokens, tokens)
+}
+
+func Test07_TokenizerRecognizeReservedKeywords(t *testing.T) {
+	source := `def x = 3+2;
+			   def hola = if x then 2 elif x then \z -> z 3 else 0 else 8`
+
+	tokens := tokenizer.Exec(source)
+
+	expectedTokens := []tokenizer.Token{
+		{Kind: tokenizer.DEF, Value: "def"},
+		{Kind: tokenizer.LOWERID, Value: "x"},
+		{Kind: tokenizer.DEFEQ, Value: "="},
+		{Kind: tokenizer.NUMBER, Value: "3"},
+		{Kind: tokenizer.PLUS, Value: "+"},
+		{Kind: tokenizer.NUMBER, Value: "2"},
+		{Kind: tokenizer.SEMICOLON, Value: ";"},
+		{Kind: tokenizer.DEF, Value: "def"},
+		{Kind: tokenizer.LOWERID, Value: "hola"},
+		{Kind: tokenizer.DEFEQ, Value: "="},
+		{Kind: tokenizer.IF, Value: "if"},
+		{Kind: tokenizer.LOWERID, Value: "x"},
+		{Kind: tokenizer.THEN, Value: "then"},
+		{Kind: tokenizer.NUMBER, Value: "2"},
+		{Kind: tokenizer.ELIF, Value: "elif"},
+		{Kind: tokenizer.LOWERID, Value: "x"},
+		{Kind: tokenizer.THEN, Value: "then"},
+		{Kind: tokenizer.LAMBDA, Value: "\\"},
+		{Kind: tokenizer.LOWERID, Value: "z"},
+		{Kind: tokenizer.ARROW, Value: "->"},
+		{Kind: tokenizer.LOWERID, Value: "z"},
+		{Kind: tokenizer.NUMBER, Value: "3"},
+		{Kind: tokenizer.ELSE, Value: "else"},
+		{Kind: tokenizer.NUMBER, Value: "0"},
+		{Kind: tokenizer.ELSE, Value: "else"},
+		{Kind: tokenizer.NUMBER, Value: "8"},
+		{Kind: tokenizer.EOF, Value: "EOF"},
+	}
+
+	assert.Equal(t, expectedTokens, tokens)
+}
