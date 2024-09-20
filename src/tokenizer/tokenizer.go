@@ -33,14 +33,14 @@ func (tok *tokenizer) remainder() string {
 	return tok.source[tok.pos:]
 }
 
-func (tok *tokenizer) at_eof() bool {
+func (tok *tokenizer) atEof() bool {
 	return tok.pos >= len(tok.source)
 }
 
 func Exec(source string) []Token {
 	tok := initTokenizer(source)
 
-	for !tok.at_eof() {
+	for !tok.atEof() {
 		matched := false
 		for _, pattern := range tok.patterns {
 			loc := pattern.regex.FindStringIndex(tok.remainder())
@@ -76,6 +76,7 @@ func initTokenizer(source string) *tokenizer {
 			// PALABRAS QUE NO SON TOKENS
 			{regexp.MustCompile(`--.*`), commentHandler},
 			{regexp.MustCompile(`\s+`), ignoreHandler},
+
 			// IDENTIFICADORES
 			{regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9_]*`), wordsHandler},
 
@@ -145,7 +146,7 @@ func commentHandler(tok *tokenizer, regex *regexp.Regexp) {
 
 func wordsHandler(tok *tokenizer, regex *regexp.Regexp) {
 	value := regex.FindString(tok.remainder())
-	if kind, exists := reserved_keywords[value]; exists {
+	if kind, exists := reservedKeywords[value]; exists {
 		tok.push(NewToken(kind, value))
 	} else {
 		if firstChar := rune(value[0]); unicode.IsUpper(firstChar) {

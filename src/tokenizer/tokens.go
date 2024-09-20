@@ -9,12 +9,14 @@ const (
 	//////////////////
 	// IDENTIFICADORES
 	//////////////////
+
 	LOWERID
 	UPPERID
 
 	//////////////////
 	// CONSTANTES
 	//////////////////
+
 	NUMBER
 	CHAR
 	STRING
@@ -22,6 +24,7 @@ const (
 	//////////////////
 	// DELIMITADORES
 	//////////////////
+
 	DEFEQ
 	SEMICOLON
 	LPAREN
@@ -33,6 +36,7 @@ const (
 	//////////////////
 	// OPERADORES LOGICOS
 	//////////////////
+
 	AND
 	OR
 	NOT
@@ -40,6 +44,7 @@ const (
 	//////////////////
 	// COMPARACIONES
 	//////////////////
+
 	EQ
 	NE
 	GE
@@ -50,6 +55,7 @@ const (
 	//////////////////
 	// OPERADORES ARITMETICOS
 	//////////////////
+
 	PLUS
 	MINUS
 	TIMES
@@ -59,6 +65,7 @@ const (
 	//////////////////
 	// PALABRAS CLAVES
 	//////////////////
+
 	DEF
 	IF
 	THEN
@@ -76,7 +83,7 @@ type Token struct {
 	Value string
 }
 
-var reserved_keywords map[string]TokenKind = map[string]TokenKind{
+var reservedKeywords map[string]TokenKind = map[string]TokenKind{
 	"def":  DEF,
 	"if":   IF,
 	"then": THEN,
