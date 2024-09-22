@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	bytes, _ := os.ReadFile("./inputs/01_ops.fc")
+	bytes, _ := os.ReadFile("./inputs/02_ops.fcl")
 	code := string(bytes)
 	tokens := tokenizer.Exec(code)
 
