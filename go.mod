@@ -3,6 +3,7 @@ module github.com/fagustin07/flecha-lang
 go 1.19
 
 require github.com/stretchr/testify v1.9.0
+require github.com/sanity-io/litter v1.5.5
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

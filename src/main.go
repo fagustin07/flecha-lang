@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/fagustin07/flecha-lang/src/parser"
+	"github.com/sanity-io/litter"
 	"os"
 
 	"github.com/fagustin07/flecha-lang/src/tokenizer"
@@ -8,10 +10,9 @@ import (
 
 func main() {
 	bytes, _ := os.ReadFile("./inputs/02_ops.fcl")
-	code := string(bytes)
-	tokens := tokenizer.Exec(code)
+	tokens := tokenizer.Exec(string(bytes))
 
-	for _, token := range tokens {
-		token.Print()
-	}
+	ast := parser.Parse(tokens)
+
+	litter.Dump(ast)
 }

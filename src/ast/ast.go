@@ -1,9 +1,9 @@
 package ast
 
-type Statement interface {
+type Stmt interface {
 	stmt()
 }
 
-type Expression interface {
+type Expr interface {
 	expr()
 }
