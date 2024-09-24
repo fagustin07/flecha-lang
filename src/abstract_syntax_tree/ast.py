@@ -37,7 +37,7 @@ class AstNode:
         self.kind = kind
         self.children: list['AstNode'] = children
 
-    def append(self, child: 'AstNode') -> 'AstNode':
+    def add_node(self, child: 'AstNode') -> 'AstNode':
         self.children.append(child)
         return self
 
@@ -63,7 +63,7 @@ class AstLeaf(AstNode):
         return self.value
 
 
-class AstNodeSequence(AstNode):
+class AstSequence(AstNode):
     def __init__(self, kind: AstKind, nodes: Sequence[AstNode]):
         super().__init__(kind, nodes)
 
