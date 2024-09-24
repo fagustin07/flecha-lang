@@ -5,7 +5,7 @@ from parser import Parser
 
 if __name__ == "__main__":
     parser = Parser()
-    filename = os.path.join(os.path.dirname(__file__), '..', 'inputs', '01_ops.fc')
+    filename = os.path.join(os.path.dirname(__file__), 'inputs/test18.input')
 
     with open(filename, 'r') as file:
         file_content = file.read()

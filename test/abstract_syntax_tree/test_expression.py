@@ -1,4 +1,4 @@
-from src.abstract_syntax_tree.expression import ApplyExpr, LiteralCharExpr, LiteralConstructorExpr, LambdaExpr, LetExpr, LiteralVariableExpr
+from src.abstract_syntax_tree.expression import ExprApply, LiteralCharExpr, LiteralConstructorExpr, ExprLambda, ExprLet, LiteralVariableExpr
 from src.abstract_syntax_tree.expression import FlechaFactoryExpression
 import unittest
 
@@ -18,12 +18,12 @@ class TestExpression(unittest.TestCase):
     def test02_se_genera_una_lista_de_caracteres_al_recibir_un_string(self):
         result = self.factory.charlist_from_string("abc")
 
-        expected = ApplyExpr(
-            ApplyExpr(LiteralConstructorExpr('Cons'), LiteralCharExpr('a')),
-            ApplyExpr(
-                ApplyExpr(LiteralConstructorExpr('Cons'), LiteralCharExpr('b')),
-                ApplyExpr(
-                    ApplyExpr(LiteralConstructorExpr('Cons'), LiteralCharExpr('c')),
+        expected = ExprApply(
+            ExprApply(LiteralConstructorExpr('Cons'), LiteralCharExpr('a')),
+            ExprApply(
+                ExprApply(LiteralConstructorExpr('Cons'), LiteralCharExpr('b')),
+                ExprApply(
+                    ExprApply(LiteralConstructorExpr('Cons'), LiteralCharExpr('c')),
                     LiteralConstructorExpr('Nil')
                 )
             )
@@ -32,35 +32,35 @@ class TestExpression(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test03_si_no_hay_parametros_entonces_se_toma_la_expresion_a_derecha(self):
-        expr = LambdaExpr(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
+        expr = ExprLambda(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
 
         result = self.factory.expression_with_params([], expr)
 
         self.assertEqual(result, expr)
 
     def test04_cuando_hay_un_parametro_entonces_se_genera_una_expresion_lambda(self):
-        expr = LambdaExpr(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
+        expr = ExprLambda(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
 
         result = self.factory.expression_with_params([LiteralVariableExpr('y')], expr)
 
-        expected = LambdaExpr(LiteralVariableExpr('y'), expr)
+        expected = ExprLambda(LiteralVariableExpr('y'), expr)
         self.assertEqual(expected, result)
 
     def test05_cuando_hay_mas_de_un_parametro_entonces_se_anidan_lambdas(self):
-        expr = LambdaExpr(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
+        expr = ExprLambda(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
 
         result = self.factory.expression_with_params([LiteralVariableExpr('y'), LiteralVariableExpr('z')], expr)
 
-        expected = LambdaExpr(LiteralVariableExpr('y'), LambdaExpr(LiteralVariableExpr('z'), expr))
+        expected = ExprLambda(LiteralVariableExpr('y'), ExprLambda(LiteralVariableExpr('z'), expr))
         self.assertEqual(expected, result)
 
     def test06_cuando_hay_una_secuencia_de_expresiones_entonces_se_traduce_a_un_let_que_ignora_el_argumento(self):
-        expr1 = LambdaExpr(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
-        expr2 = LambdaExpr(LiteralVariableExpr('y'), LiteralVariableExpr('y'))
+        expr1 = ExprLambda(LiteralVariableExpr('x'), LiteralVariableExpr('x'))
+        expr2 = ExprLambda(LiteralVariableExpr('y'), LiteralVariableExpr('y'))
 
         result = self.factory.seq_expr_with_expressions(expr1, expr2)
 
-        expected = LetExpr(self.factory.empty_id(), expr1, expr2)
+        expected = ExprLet(self.factory.empty_id(), expr1, expr2)
         self.assertEqual(expected, result)
 
 

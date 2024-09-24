@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from src.abstract_syntax_tree.ast import AstKind, AstLeaf, AstNode, AstSequence
 
 
@@ -19,14 +21,14 @@ class FlechaFactoryExpression:
 
     def let_expression_from(self, param_name, params, let_param_def, let_context):
         args = self.expression_with_params(params, let_param_def)
-        return LetExpr(param_name, args, let_context)
+        return ExprLet(param_name, args, let_context)
 
     def charlist_from_string(self, desired_string: str):
         if not desired_string:
             return LiteralConstructorExpr(self.empty_list_constructor())
         return (
-            ApplyExpr(
-                ApplyExpr(
+            ExprApply(
+                ExprApply(
                     LiteralConstructorExpr(self.concat_list_constructor()),
                     LiteralCharExpr(desired_string[0])
                 ),
@@ -37,12 +39,29 @@ class FlechaFactoryExpression:
     def expression_with_params(self, params, expression):
         if not params:
             return expression
-        return LambdaExpr(params[0], self.expression_with_params(params[1::], expression))
+        return ExprLambda(params[0], self.expression_with_params(params[1::], expression))
 
     def seq_expr_with_expressions(self, expr1, expr2):
-        return LetExpr(self.empty_id(), expr1, expr2)
+        return ExprLet(self.empty_id(), expr1, expr2)
 
-    # PRIVATE
+    def apply_expr_from(self, expr, literal_expr):
+        return ExprApply(expr, literal_expr)
+
+    def binary_expr_from(self, left_expr, operator, right_expr):
+        op = keywords_dict[OP_BINARY].get(operator)
+        left_apply = ExprApply(LiteralVariableExpr(op), left_expr)
+        return ExprApply(left_apply, right_expr)
+
+    def unary_expr_from(self, operator, expr):
+        op = keywords_dict[OP_UNARY].get(operator)
+        return ExprApply(LiteralVariableExpr(op), expr)
+
+    def build_if(self, expr, then_expr, else_expr):
+        return CaseExpr(expr, CaseBranches([CaseBranch(TRUE_ID, [], then_expr), else_expr]))
+
+    def build_else(self, else_expr):
+        return CaseBranch(FALSE_ID, [], else_expr)
+
     def concat_list_constructor(self):
         return 'Cons'
 
@@ -67,6 +86,9 @@ class FlechaFactoryExpression:
             case _:
                 raise Exception(f"[Error] Unespected token: {value}")
 
+
+TRUE_ID = 'True'
+FALSE_ID = 'False'
 
 OP_UNARY = 'unary'
 OP_BINARY = 'binary'
@@ -138,22 +160,22 @@ class Def(AstNode):
         super().__init__(AstKind.Def, [AstLeaf(AstKind.Id, id_value), expr])
 
 
-class LetExpr(AstNode):
+class ExprLet(AstNode):
     def __init__(self, _id: str, expr1, expr2):
         super().__init__(AstKind.ExprLet, [AstLeaf(AstKind.Id, _id), expr1, expr2])
 
 
-class ApplyExpr(AstNode):
+class ExprApply(AstNode):
     def __init__(self, func, arg):
         super().__init__(AstKind.ExprApply, [func, arg])
 
 
-class LambdaExpr(AstNode):
+class ExprLambda(AstNode):
     def __init__(self, param, expr):
         super().__init__(AstKind.ExprLambda, [AstLeaf(AstKind.Id, param), expr])
 
 
-class LiteralExpr(AstLeaf):
+class ExprLiteral(AstLeaf):
     def __init__(self, kind: AstKind, value):
         super().__init__(kind, value)
 
@@ -161,21 +183,66 @@ class LiteralExpr(AstLeaf):
         return [self.kind, self.value]
 
 
-class LiteralNumberExpr(LiteralExpr):
+class LiteralNumberExpr(ExprLiteral):
     def __init__(self, value):
         super().__init__(AstKind.ExprNumber, value)
 
 
-class LiteralVariableExpr(LiteralExpr):
+class LiteralVariableExpr(ExprLiteral):
     def __init__(self, value):
         super().__init__(AstKind.ExprVar, AstLeaf(AstKind.Id, value))
 
 
-class LiteralConstructorExpr(LiteralExpr):
+class LiteralConstructorExpr(ExprLiteral):
     def __init__(self, value):
         super().__init__(AstKind.ExprConstructor, AstLeaf(AstKind.Id, value))
 
 
-class LiteralCharExpr(LiteralExpr):
+class LiteralCharExpr(ExprLiteral):
     def __init__(self, value):
         super().__init__(AstKind.ExprChar, ord(value))
+
+
+class CaseBranch(AstNode):
+    def __init__(self, _id: str, _params: Sequence[str], expr):
+        super().__init__(AstKind.CaseBranch,
+                         [AstLeaf(AstKind.Id, _id), Params([AstLeaf(AstKind.Id, param) for param in _params]), expr])
+
+    def id(self):
+        return self.children[0].value
+
+    def params(self):
+        return [param.value for param in self.children[1].children]
+
+    def expr(self):
+        return self.children[2]
+
+
+class Params(AstSequence):
+    def __init__(self, params):
+        super().__init__(AstKind.Params, params)
+
+
+class CaseBranches(AstSequence):
+    def __init__(self, branches: Sequence[CaseBranch]):
+        super().__init__(AstKind.CaseBranches, branches)
+
+    def add_case(self, branch):
+        return self.add_node(branch)
+
+
+class CaseExpr(AstNode):
+    def __init__(self, expr: AstNode, branches: CaseBranches):
+        super().__init__(AstKind.ExprCase, [expr] + branches.children)
+
+    def expr(self):
+        return self.children[0]
+
+    def branches(self):
+        return self.children[1:]
+
+    def _out_branches(self):
+        return [b._out() for b in self.branches()]
+
+    def _out(self):
+        return [self.kind, self.expr()._out(), self._out_branches()]

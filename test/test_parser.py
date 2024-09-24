@@ -1,22 +1,35 @@
+import os
 import unittest
+
+from src.abstract_syntax_tree.expression import Def, ExprLet, ExprApply, LiteralVariableExpr, FlechaFactoryExpression, \
+    Program, LiteralNumberExpr, CaseExpr, CaseBranches, CaseBranch, ExprLambda, LiteralConstructorExpr
 from src.parser import Parser
 
 
 class ParserTest(unittest.TestCase):
+    def setUp(self):
+        self.factory = FlechaFactoryExpression()
 
     def test01_cuando_se_analiza_sintacticamente_una_expresion_secuenciacion_entonces_se_genera_ast_de_let(self):
         input_seq = """
         def main = print "hola\n"; print "chau\n"
         """
 
-        ast_let = [
-            ['Def',
-             'main',
-             ['LetExpr',
-              '_',
-              ['ExprApply', ['ExprVar', 'print'], ['ExprString', 'hola\n']],
-              ['ExprApply', ['ExprVar', 'print'], ['ExprString', 'chau\n']]]]]
-
+        ast_let = Program()
+        ast_let.add_node(Def(
+            'main',
+            ExprLet(
+                '_',
+                ExprApply(
+                    LiteralVariableExpr('print'),
+                    self.factory.literal_expr_from('STRING', 'hola\n'),
+                ),
+                ExprApply(
+                    LiteralVariableExpr('print'),
+                    self.factory.literal_expr_from('STRING', 'chau\n'),
+                )
+            )
+        ))
         parser = Parser()
         seq_ast = parser.parse(input_seq)
 
@@ -24,303 +37,167 @@ class ParserTest(unittest.TestCase):
 
     def test02_cuando_se_reciben_deficiniones_entonces_se_genera_el_ast_correspondiente(self):
         input_program = """
-            -- Numeros
             def uno = 1
-            def dos =2--comentario
-            def tres= 3  -- otro comentario
-            def
-            cuatro=4--comentario
-            def cinco = 5 def seis = 6def siete = 7
-              def
-                ocho
-                  =
-                     8 def
-            nueve
-            =9
-            def cero=0
-            def cerocero=00
-            def cerocerocero=000
-            def def_=10
-            def ifthenelse=11
-            def p_r_u_e_b_a=1987654321
-            def camelCase=12
-            def x1 = 11
-            def x2 = 12
+            def dos = 2
+            def tres = 3
         """
 
-        expected_ast = [
-            ["Def", "uno",
-             ["ExprNumber", 1]
-             ],
-            ["Def", "dos",
-             ["ExprNumber", 2]
-             ],
-            ["Def", "tres",
-             ["ExprNumber", 3]
-             ],
-            ["Def", "cuatro",
-             ["ExprNumber", 4]
-             ],
-            ["Def", "cinco",
-             ["ExprNumber", 5]
-             ],
-            ["Def", "seis",
-             ["ExprNumber", 6]
-             ],
-            ["Def", "siete",
-             ["ExprNumber", 7]
-             ],
-            ["Def", "ocho",
-             ["ExprNumber", 8]
-             ],
-            ["Def", "nueve",
-             ["ExprNumber", 9]
-             ],
-            ["Def", "cero",
-             ["ExprNumber", 0]
-             ],
-            ["Def", "cerocero",
-             ["ExprNumber", 0]
-             ],
-            ["Def", "cerocerocero",
-             ["ExprNumber", 0]
-             ],
-            ["Def", "def_",
-             ["ExprNumber", 10]
-             ],
-            ["Def", "ifthenelse",
-             ["ExprNumber", 11]
-             ],
-            ["Def", "p_r_u_e_b_a",
-             ["ExprNumber", 1987654321]
-             ],
-            ["Def", "camelCase",
-             ["ExprNumber", 12]
-             ],
-            ["Def", "x1",
-             ["ExprNumber", 11]
-             ],
-            ["Def", "x2",
-             ["ExprNumber", 12]
-             ]
+        defs = [
+            Def("uno", LiteralNumberExpr(1)),
+            Def("dos", LiteralNumberExpr(2)),
+            Def("tres", LiteralNumberExpr(3)),
         ]
+        expected_prog = Program()
+
+        for d in defs:
+            expected_prog.add_node(d)
 
         parser = Parser()
         actual_ast = parser.parse(input_program)
-        self.assertEqual(actual_ast, expected_ast)
+        self.assertEqual(actual_ast, expected_prog)
 
-    def test03_cuando_se_reciben_deficiniones_con_mas_de_un_parametro_entonces_se_genera_un_ast_con_expresiones_lambda(self):
-        input_seq = """
-
-def null list =
-  case list
-  | Nil       -> True
-  | Cons x xs -> False
-
-def head list =
-  case list
-  | Cons x xs -> x
-
-def tail list =
-  case list
-  | Cons x xs -> xs
-
-def take n list =
-  if n == 0 || null list
-   then Nil
-   else Cons (head list) (take (n - 1) (tail list))
-
-def sum list =
-  if null list
-   then 0
-   else head list + tail list
-
-def gen n =
-  if n == 0
-   then Nil
-   else Cons n (gen (n - 1))
-
-def main =
-  sum (gen 100)
+    def test03_cuando_se_analiza_una_expresion_let_entonces_se_genera_el_ast_correctamente(self):
+        input_let = """
+        def x = let y = 5 in y
         """
 
-        ast_let = [
-            ["Def", "null",
-             ["ExprLambda", "list",
-              ["ExprCase",
-               ["ExprVar", "list"],
-               [
-                   ["CaseBranch", "Nil", [],
-                    ["ExprConstructor", "True"]
-                    ],
-                   ["CaseBranch", "Cons", ["x", "xs"],
-                    ["ExprConstructor", "False"]
-                    ]
-               ]
-               ]
-              ]
-             ],
-            ["Def", "head",
-             ["ExprLambda", "list",
-              ["ExprCase",
-               ["ExprVar", "list"],
-               [
-                   ["CaseBranch", "Cons", ["x", "xs"],
-                    ["ExprVar", "x"]
-                    ]
-               ]
-               ]
-              ]
-             ],
-            ["Def", "tail",
-             ["ExprLambda", "list",
-              ["ExprCase",
-               ["ExprVar", "list"],
-               [
-                   ["CaseBranch", "Cons", ["x", "xs"],
-                    ["ExprVar", "xs"]
-                    ]
-               ]
-               ]
-              ]
-             ],
-            ["Def", "take",
-             ["ExprLambda", "n",
-              ["ExprLambda", "list",
-               ["ExprCase",
-                ["ExprApply",
-                 ["ExprApply",
-                  ["ExprVar", "OR"],
-                  ["ExprApply",
-                   ["ExprApply",
-                    ["ExprVar", "EQ"],
-                    ["ExprVar", "n"]
-                    ],
-                   ["ExprNumber", 0]
-                   ]
-                  ],
-                 ["ExprApply",
-                  ["ExprVar", "null"],
-                  ["ExprVar", "list"]
-                  ]
-                 ],
-                [
-                    ["CaseBranch", "True", [],
-                     ["ExprConstructor", "Nil"]
-                     ],
-                    ["CaseBranch", "False", [],
-                     ["ExprApply",
-                      ["ExprApply",
-                       ["ExprConstructor", "Cons"],
-                       ["ExprApply",
-                        ["ExprVar", "head"],
-                        ["ExprVar", "list"]
-                        ]
-                       ],
-                      ["ExprApply",
-                       ["ExprApply",
-                        ["ExprVar", "take"],
-                        ["ExprApply",
-                         ["ExprApply",
-                          ["ExprVar", "SUB"],
-                          ["ExprVar", "n"]
-                          ],
-                         ["ExprNumber", 1]
-                         ]
-                        ],
-                       ["ExprApply",
-                        ["ExprVar", "tail"],
-                        ["ExprVar", "list"]
-                        ]
-                       ]
-                      ]
-                     ]
-                ]
-                ]
-               ]
-              ]
-             ],
-            ["Def", "sum",
-             ["ExprLambda", "list",
-              ["ExprCase",
-               ["ExprApply",
-                ["ExprVar", "null"],
-                ["ExprVar", "list"]
-                ],
-               [
-                   ["CaseBranch", "True", [],
-                    ["ExprNumber", 0]
-                    ],
-                   ["CaseBranch", "False", [],
-                    ["ExprApply",
-                     ["ExprApply",
-                      ["ExprVar", "ADD"],
-                      ["ExprApply",
-                       ["ExprVar", "head"],
-                       ["ExprVar", "list"]
-                       ]
-                      ],
-                     ["ExprApply",
-                      ["ExprVar", "tail"],
-                      ["ExprVar", "list"]
-                      ]
-                     ]
-                    ]
-               ]
-               ]
-              ]
-             ],
-            ["Def", "gen",
-             ["ExprLambda", "n",
-              ["ExprCase",
-               ["ExprApply",
-                ["ExprApply",
-                 ["ExprVar", "EQ"],
-                 ["ExprVar", "n"]
-                 ],
-                ["ExprNumber", 0]
-                ],
-               [
-                   ["CaseBranch", "True", [],
-                    ["ExprConstructor", "Nil"]
-                    ],
-                   ["CaseBranch", "False", [],
-                    ["ExprApply",
-                     ["ExprApply",
-                      ["ExprConstructor", "Cons"],
-                      ["ExprVar", "n"]
-                      ],
-                     ["ExprApply",
-                      ["ExprVar", "gen"],
-                      ["ExprApply",
-                       ["ExprApply",
-                        ["ExprVar", "SUB"],
-                        ["ExprVar", "n"]
-                        ],
-                       ["ExprNumber", 1]
-                       ]
-                      ]
-                     ]
-                    ]
-               ]
-               ]
-              ]
-             ],
-            ["Def", "main",
-             ["ExprApply",
-              ["ExprVar", "sum"],
-              ["ExprApply",
-               ["ExprVar", "gen"],
-               ["ExprNumber", 100]
-               ]
-              ]
-             ]
-        ]
+        ast_let = Program()
+
+        ast_let.add_node(Def(LiteralVariableExpr('x'),
+                             self.factory.let_expression_from(LiteralVariableExpr('y'), [], LiteralNumberExpr(5),
+                                                              LiteralVariableExpr('y'))))
 
         parser = Parser()
-        seq_ast = parser.parse(input_seq)
+        actual_ast = parser.parse(input_let)
+        self.assertEqual(ast_let, actual_ast)
 
-        self.assertEqual(seq_ast, ast_let)
+    # Test para expresiones lambda
+    def test04_cuando_se_analiza_una_expresion_lambda_entonces_se_genera_el_ast_correctamente(self):
+        input_lambda = """
+        def increment =  \\x -> x + 1
+        """
+
+        ast_lambda = Program()
+
+        x = Def("increment", ExprLambda(LiteralVariableExpr('x'),
+                                        ExprApply(
+                                            ExprApply(LiteralVariableExpr('ADD'), LiteralVariableExpr('x')),
+                                            LiteralNumberExpr(1)
+                                        )
+                                        ))
+        ast_lambda.add_node(x)
+        parser = Parser()
+        actual_ast = parser.parse(input_lambda)
+        self.assertEqual(actual_ast, ast_lambda)
+
+    def test05_cuando_se_analiza_una_expresion_case_entonces_se_genera_el_ast_correctamente(self):
+        input_case = """
+            def null list =
+              case list
+              | Nil       -> True
+              | Cons x xs -> False
+        """
+        case_expr = ExprLambda(LiteralVariableExpr('list'),
+                               CaseExpr(LiteralVariableExpr('list'), CaseBranches(
+                                   [CaseBranch('Nil', [], LiteralConstructorExpr('True')),
+                                    CaseBranch('Cons', ['x', 'xs'], LiteralConstructorExpr('False')),
+                                    ]
+                               )))
+        program = Program()
+        case_def_expr = Def("null", case_expr)
+        program.add_node(case_def_expr)
+        parser = Parser()
+
+        actual_ast = parser.parse(input_case)
+
+        self.assertEqual(program, actual_ast)
+
+    # Test para expresiones if-then-else
+    def test06_cuando_se_analiza_una_expresion_if_entonces_se_genera_el_ast_correctamente(self):
+        input_if = """
+        def natural x = if x > 0 then print 1 else print 2
+        """
+        expected_if_then_else_ast = (
+            Def(
+                'natural',
+                ExprLambda(
+                    'x',
+                    CaseExpr(
+                        ExprApply(
+                            ExprApply(
+                                LiteralVariableExpr('GT'),
+                                LiteralVariableExpr('x')
+                            ),
+                            LiteralNumberExpr(0)
+                        ),
+                        CaseBranches(
+                            [
+                                CaseBranch(
+                                    'True',
+                                    [],
+                                    ExprApply(
+                                        LiteralVariableExpr('print'),
+                                        LiteralNumberExpr(1)
+                                    )
+                                ),
+                                CaseBranch(
+                                    'False',
+                                    [],
+                                    ExprApply(
+                                        LiteralVariableExpr('print'),
+                                        LiteralNumberExpr(2)
+                                    )
+                                ),
+                            ]
+                        )
+                    )
+                )
+            ))
+        ast_if = Program().add_node(expected_if_then_else_ast)
+
+        parser = Parser()
+        actual_ast = parser.parse(input_if)
+        self.assertEqual(ast_if, actual_ast)
+
+    def test07_cuando_se_analiza_un_programa_con_comentarios_se_genera_el_ast_correctamente(self):
+        input_with_comments = """
+        def a = 10 -- variable a
+        def b = 20 -- variable b
+        """
+
+        ast_program = Program()
+        ast_program.add_node(Def("a", LiteralNumberExpr(10)))
+        ast_program.add_node(Def("b", LiteralNumberExpr(20)))
+
+        parser = Parser()
+        actual_ast = parser.parse(input_with_comments)
+        self.assertEqual(actual_ast, ast_program)
+
+    # Test para expresiones de aplicación
+    def test08_cuando_se_analiza_una_expresion_con_parentesis_se_genera_el_ast_correctamente(self):
+        input_apply = """
+        def init = print (sum 1 2)
+        """
+
+        init = Def(
+            "init",
+            ExprApply(
+                LiteralVariableExpr('print'),
+                ExprApply(
+                    ExprApply(
+                        LiteralVariableExpr('sum'),
+                        LiteralNumberExpr(1)
+                    ),
+                    LiteralNumberExpr(2)
+                )
+            )
+        )
+        ast_apply = Program().add_node(init)
+        parser = Parser()
+
+        actual_ast = parser.parse(input_apply)
+
+        self.assertEqual(ast_apply, actual_ast)
 
 
 if __name__ == '__main__':

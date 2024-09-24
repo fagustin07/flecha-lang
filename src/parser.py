@@ -1,5 +1,7 @@
 from ply.yacc import yacc
 
+from src.abstract_syntax_tree.expression import FlechaFactoryExpression, Program, Def, ExprLet, ExprApply, CaseExpr, \
+    CaseBranches, CaseBranch
 from src.lexer import Lexer
 
 
@@ -19,21 +21,19 @@ class Parser:
     def __init__(self):
         self.__lexer = Lexer().build()
         self.__yacc = yacc(module=self)
+        self.__factory = FlechaFactoryExpression()
 
     def p_program_empty(self, p):
         """program :"""
-        p[0] = []
+        p[0] = self.__factory.empty_program()
 
     def p_program(self, p):
         """program : program definition"""
-        p[0] = p[1] + [p[2]]
+        p[0] = self.__factory.program_with(p[1], p[2])
 
     def p_def(self, p):
         """definition : DEF LOWERID parameters DEFEQ expression"""
-        if len(p[3]) == 0:
-            p[0] = ['Def', p[2], p[5]]
-        else:
-            p[0] = ['Def', p[2], p[3], p[5]]
+        p[0] = self.__factory.definition_from(p[2], p[3], p[5])
 
     def p_parameters_empty(self, p):
         """parameters :"""
@@ -44,118 +44,105 @@ class Parser:
         p[0] = p[1] + [p[2]]
 
     def p_expression(self, p):
-        """expression :  outerExpr
+        """expression :  externalExpr
                        | sequenceExpr"""
         p[0] = p[1]
 
     def p_sequence_expr(self, p):
-        """sequenceExpr : outerExpr SEMICOLON expression"""
-        p[0] = ['LetExpr', '_', p[1], p[3]]
+        """sequenceExpr : externalExpr SEMICOLON expression"""
+        p[0] = self.__factory.seq_expr_with_expressions(p[1], p[3])
 
-    def p_outer_expr(self, p):
-        """outerExpr :  ifExpr
-                      | letExpr
-                      | lambdaExpr
-                      | caseExpr
-                      | innerExpr"""
+    def p_external_expr(self, p):
+        """externalExpr :  ifExpr
+                          | letExpr
+                          | lambdaExpr
+                          | caseExpr
+                          | internalExpr"""
         p[0] = p[1]
 
-    def p_let_expr(self, p):
-        """letExpr : LET LOWERID parameters DEFEQ innerExpr IN outerExpr"""
-        p[0] = ['LetExpr', p[2], p[3], p[5], p[7]]
-
-    def p_lambda_expr(self, p):
-        """lambdaExpr : LAMBDA parameters ARROW outerExpr"""
-        p[0] = ['ExprLambda', p[2], p[4]]
-
-    def p_case_expr(self, p):
-        """caseExpr : CASE innerExpr caseBranches"""
-        p[0] = ['ExprCase', p[2]] + p[3]
-
-    def p_case_branches_empty(self, p):
-        """caseBranches :"""
-        p[0] = []
-
-    def p_case_branches_case_branch(self, p):
-        """caseBranches : caseBranches caseBranch"""
-        p[0] = p[1] + [p[2]]
-
-    def p_case_branch(self, p):
-        """caseBranch : PIPE UPPERID parameters ARROW innerExpr"""
-        p[0] = ['CaseBranch', p[2], p[3], p[5]]
-
-    def p_if_expr(self, p):
-        """ifExpr : IF innerExpr THEN innerExpr elseBranches"""
-        p[0] = ['ExprCase', p[2]] + p[4] + p[5]
-
-    def p_else_branches_elif(self, p):
-        """elseBranches : ELIF innerExpr THEN innerExpr elseBranches"""
-        p[0] = ['CaseBranch', 'False', [], ['ExprCase', p[2], p[4]]] + p[5]
-
-    def p_else_branches_else(self, p):
-        """elseBranches : ELSE innerExpr"""
-        p[0] = ['CaseBranch', 'False', [], p[2]]
-
-    def p_inner_expr(self, p):
-        """innerExpr : applyExpr
+    def p_internal_expr(self, p):
+        """internalExpr : applyExpr
                      | binaryExpr
                      | unaryExpr"""
         p[0] = p[1]
 
+    def p_let_expr(self, p):
+        """letExpr : LET LOWERID parameters DEFEQ internalExpr IN externalExpr"""
+        p[0] = self.__factory.let_expression_from(p[2], p[3], p[5], p[7])
+
+    def p_lambda_expr(self, p):
+        """lambdaExpr : LAMBDA parameters ARROW externalExpr"""
+        p[0] = self.__factory.expression_with_params(p[2], p[4])
+
     def p_apply_expr_base(self, p):
-        """applyExpr : atomicExpr"""
+        """applyExpr : literalExpr"""
         p[0] = p[1]
 
     def p_apply_expr(self, p):
-        """applyExpr : applyExpr atomicExpr"""
-        p[0] = ['ExprApply', p[1], p[2]]
+        """applyExpr : applyExpr literalExpr"""
+        p[0] = self.__factory.apply_expr_from(p[1], p[2])
 
-    def p_atomic_expr(self, p):
-        """atomicExpr :   LOWERID
+    def p_literal_expr(self, p):
+        """literalExpr :   LOWERID
                         | UPPERID
                         | NUMBER
                         | CHAR
                         | STRING"""
 
-        match p.slice[1].type:
-            case 'LOWERID':
-                p[0] = ['ExprVar', p[1]]
-            case 'UPPERID':
-                p[0] = ['ExprConstructor', p[1]]
-            case 'NUMBER':
-                p[0] = ['ExprNumber', p[1]]
-            case 'CHAR':
-                p[0] = ['ExprChar', p[1]]
-            case 'STRING':
-                # TODO: Parsear lista de chars
-                p[0] = ['ExprString', p[1]]
-            case _:
-                raise Exception(f"Unexpected token: {p[1]}")
+        p[0] = self.__factory.literal_expr_from(p.slice[1].type, p[1])
 
-    def p_atomic_expr_paren(self, p):
-        """atomicExpr : LPAREN expression RPAREN"""
+    def p_literal_expr_paren(self, p):
+        """literalExpr : LPAREN expression RPAREN"""
         p[0] = p[2]
 
     def p_binary_expr(self, p):
-        """binaryExpr : innerExpr OR innerExpr
-                    | innerExpr AND innerExpr
-                    | innerExpr EQ innerExpr
-                    | innerExpr NE innerExpr
-                    | innerExpr GE innerExpr
-                    | innerExpr LE innerExpr
-                    | innerExpr GT innerExpr
-                    | innerExpr LT innerExpr
-                    | innerExpr PLUS innerExpr
-                    | innerExpr MINUS innerExpr
-                    | innerExpr TIMES innerExpr
-                    | innerExpr DIV innerExpr
-                    | innerExpr MOD innerExpr"""
-        p[0] = [p[2], p[1], p[3]]
+        """binaryExpr : internalExpr OR internalExpr
+                    | internalExpr AND internalExpr
+                    | internalExpr EQ internalExpr
+                    | internalExpr NE internalExpr
+                    | internalExpr GE internalExpr
+                    | internalExpr LE internalExpr
+                    | internalExpr GT internalExpr
+                    | internalExpr LT internalExpr
+                    | internalExpr PLUS internalExpr
+                    | internalExpr MINUS internalExpr
+                    | internalExpr TIMES internalExpr
+                    | internalExpr DIV internalExpr
+                    | internalExpr MOD internalExpr"""
+        p[0] = self.__factory.binary_expr_from(p[1], p[2], p[3])
 
     def p_unary_expr(self, p):
-        """unaryExpr : MINUS innerExpr %prec UMINUS
-                     | NOT innerExpr"""
-        p[0] = [p[1], p[2]]
+        """unaryExpr : MINUS internalExpr %prec UMINUS
+                     | NOT internalExpr"""
+        p[0] = self.__factory.unary_expr_from(p[1], p[2])
+
+    def p_case_expr(self, p):
+        """caseExpr : CASE internalExpr caseBranches"""
+        p[0] = CaseExpr(p[2], p[3])
+
+    def p_case_branches_empty(self, p):
+        """caseBranches :"""
+        p[0] = CaseBranches([])
+
+    def p_case_branches_case_branch(self, p):
+        """caseBranches : caseBranches caseBranch"""
+        p[0] = p[1].add_case(p[2])
+
+    def p_case_branch(self, p):
+        """caseBranch : PIPE UPPERID parameters ARROW internalExpr"""
+        p[0] = CaseBranch(p[2], p[3], p[5])
+
+    def p_if_expr(self, p):
+        """ifExpr : IF internalExpr THEN internalExpr elseBranches"""
+        p[0] = self.__factory.build_if(p[2], p[4], p[5])
+
+    def p_else_branches_elif(self, p):
+        """elseBranches : ELIF internalExpr THEN internalExpr elseBranches"""
+        p[0] = self.__factory.build_else(self.__factory.build_if(p[2], p[4], p[5]))
+
+    def p_else_branches_else(self, p):
+        """elseBranches : ELSE internalExpr"""
+        p[0] = self.__factory.build_else(p[2])
 
     def p_error(self, p):
         print(f'Syntax error: {p.value!r} | At line: {p.lineno}')
