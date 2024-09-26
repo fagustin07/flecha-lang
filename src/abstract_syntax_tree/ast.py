@@ -27,7 +27,7 @@ def flecha_json_encode(out):
     return json.dumps(out, **jsonConfig)
 
 
-AstNodeOutput = int | str | Sequence['AstNodeOutput']
+AstNodeJson = int | str | Sequence['AstNodeJson']
 
 
 class AstNode:
@@ -41,14 +41,14 @@ class AstNode:
         self.children.append(child)
         return self
 
-    def _out(self):
+    def _show(self):
         return [self.kind] + self._children_out()
 
     def _children_out(self):
-        return [c._out() for c in self.children]
+        return [c._show() for c in self.children]
 
     def __repr__(self) -> str:
-        return flecha_json_encode(self._out())
+        return flecha_json_encode(self._show())
 
     def __eq__(self, __o: object) -> bool:
         return self.__repr__() == __o.__repr__()
@@ -59,7 +59,7 @@ class AstLeaf(AstNode):
         super().__init__(kind, None)
         self.value = value
 
-    def _out(self) -> AstNodeOutput:
+    def _show(self) -> AstNodeJson:
         return self.value
 
 
@@ -67,5 +67,5 @@ class AstSequence(AstNode):
     def __init__(self, kind: AstKind, nodes: Sequence[AstNode]):
         super().__init__(kind, nodes)
 
-    def _out(self) -> AstNodeOutput:
+    def _show(self) -> AstNodeJson:
         return self._children_out() if self.children else []

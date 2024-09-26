@@ -1,0 +1,1 @@
+def es_par x = if x/2 == 0 then True else False

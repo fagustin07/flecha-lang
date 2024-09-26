@@ -1,7 +1,6 @@
 from ply.yacc import yacc
 
-from src.abstract_syntax_tree.expression import FlechaFactoryExpression, Program, Def, ExprLet, ExprApply, CaseExpr, \
-    CaseBranches, CaseBranch
+from src.abstract_syntax_tree.expression import FlechaFactoryExpression
 from src.lexer import Lexer
 
 
@@ -14,7 +13,8 @@ class Parser:
         ('right', 'NOT'),
         ('nonassoc', 'EQ', 'NE', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIV', 'MOD'),
+        ('left', 'TIMES'),
+        ('left', 'DIV', 'MOD'),
         ('right', 'UMINUS')
     )
 
@@ -118,11 +118,11 @@ class Parser:
 
     def p_case_expr(self, p):
         """caseExpr : CASE internalExpr caseBranches"""
-        p[0] = CaseExpr(p[2], p[3])
+        p[0] = self.__factory.case_expr_from(p[2], p[3])
 
     def p_case_branches_empty(self, p):
         """caseBranches :"""
-        p[0] = CaseBranches([])
+        p[0] = self.__factory.empty_branches()
 
     def p_case_branches_case_branch(self, p):
         """caseBranches : caseBranches caseBranch"""
@@ -130,7 +130,7 @@ class Parser:
 
     def p_case_branch(self, p):
         """caseBranch : PIPE UPPERID parameters ARROW internalExpr"""
-        p[0] = CaseBranch(p[2], p[3], p[5])
+        p[0] = self.__factory.case_branch_from(p[2], p[3], p[5])
 
     def p_if_expr(self, p):
         """ifExpr : IF internalExpr THEN internalExpr elseBranches"""

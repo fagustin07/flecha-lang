@@ -62,6 +62,15 @@ class FlechaFactoryExpression:
     def build_else(self, else_expr):
         return CaseBranch(FALSE_ID, [], else_expr)
 
+    def case_expr_from(self, expr, branches):
+        return CaseExpr(expr, branches)
+
+    def empty_branches(self):
+        return CaseBranches([])
+
+    def case_branch_from(self, struct_name, params, internal_expr):
+        return CaseBranch(struct_name, params, internal_expr)
+
     def concat_list_constructor(self):
         return 'Cons'
 
@@ -179,7 +188,7 @@ class ExprLiteral(AstLeaf):
     def __init__(self, kind: AstKind, value):
         super().__init__(kind, value)
 
-    def _out(self):
+    def _show(self):
         return [self.kind, self.value]
 
 
@@ -242,7 +251,7 @@ class CaseExpr(AstNode):
         return self.children[1:]
 
     def _out_branches(self):
-        return [b._out() for b in self.branches()]
+        return [b._show() for b in self.branches()]
 
-    def _out(self):
-        return [self.kind, self.expr()._out(), self._out_branches()]
+    def _show(self):
+        return [self.kind, self.expr()._show(), self._out_branches()]

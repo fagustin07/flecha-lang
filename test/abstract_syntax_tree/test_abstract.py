@@ -24,12 +24,10 @@ class TestAstNodes(unittest.TestCase):
     def test03_una_hoja_sabe_representarse_como_numero(self):
 
         leaf = AstLeaf(AstKind.ExprNumber, 42)
-        self.assertEqual(42, leaf._out())
         self.assertEqual('42', repr(leaf))
 
     def test04_una_hoja_sabe_representarse_como_char(self):
         leaf = AstLeaf(AstKind.ExprChar, 'a')
-        self.assertEqual('a', leaf._out())
         self.assertEqual('"a"', repr(leaf))
 
     def test05_un_ast_sabe_representarse_con_sus_nodos_hijos(self):
@@ -37,8 +35,6 @@ class TestAstNodes(unittest.TestCase):
         child2 = AstLeaf(AstKind.ExprVar, "y")
         node = AstNode(AstKind.ExprApply, [child1, child2])
 
-        expected_output = [AstKind.ExprApply, "x", "y"]
-        self.assertEqual(expected_output, node._out())
         self.assertEqual('["ExprApply","x","y"]', repr(node))
 
     def test06_un_ast_sabe_incorporar_nuevos_hijos(self):
