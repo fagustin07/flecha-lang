@@ -1,7 +1,7 @@
 from ply.yacc import yacc
 
-from src.abstract_syntax_tree.expression import FlechaFactoryExpression
-from src.lexer import Lexer
+from abstract_syntax_tree.expression import FlechaFactoryExpression
+from lexer import Lexer
 
 
 class Parser:

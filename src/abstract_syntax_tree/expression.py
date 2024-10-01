@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from src.abstract_syntax_tree.ast import AstKind, AstLeaf, AstNode, AstSequence
+from abstract_syntax_tree.ast import AstKind, AstLeaf, AstNode, AstSequence
 
 
 class FlechaFactoryExpression:

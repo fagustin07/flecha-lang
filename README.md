@@ -23,7 +23,7 @@ Para correr todos los test, debemos correr ` python3 -m unittest discover`
 
 ### Correr el proyecto
 
-Por otro lado, también podemos correr nuestro propio código en Flecha y generar los AST de dicho análisis. Para esto, hay un archivo `/src/main.arr`, el cual podemos modificar con nuestro propio código y ejecutar el análisis sintáctico del código corriendo `python3 run main.py`. La salida será el resultado del análisis sintáctico de dicho código.
+Por otro lado, también podemos correr nuestro propio código en Flecha y generar los AST de dicho análisis. Para esto, hay un archivo `/src/main.arr`, el cual podemos modificar con nuestro propio código y ejecutar el análisis sintáctico del código ejecutando `python3 ./src/main.py `. La salida será el resultado del análisis sintáctico del codigo en `main.arr`.
 
 
 ### Contexto sobre el desarrollo del TP1
