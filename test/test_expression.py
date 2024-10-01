@@ -1,5 +1,5 @@
-from abstract_syntax_tree.expression import ExprApply, LiteralCharExpr, LiteralConstructorExpr, ExprLambda, ExprLet, LiteralVariableExpr
-from abstract_syntax_tree.expression import FlechaFactoryExpression
+from abstract_syntax_tree.expression import ExprApply, LiteralCharExpr, LiteralConstructorExpr, ExprLambda, ExprLet, \
+    LiteralVariableExpr, FlechaFactoryExpression
 import unittest
 
 

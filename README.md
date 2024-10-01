@@ -19,7 +19,7 @@ Los archivos .input (código escrito en Flecha), y los archivos .expected (JSON 
 
 Luego, hay varios archivos con casos de prueba que fueron útiles para el desarrollo incremental del proyecto.
 
-Para correr todos los test, debemos correr desde el root del proyecto `python3 -m unittest discover -s test -p "test_*.py"`
+Para correr todos los test, debemos correr desde el root del proyecto `python3 -m unittest`
 
 ### Correr el proyecto
 

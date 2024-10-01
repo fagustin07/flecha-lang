@@ -4,9 +4,7 @@ from abstract_syntax_tree.expression import Def, ExprLet, ExprApply, LiteralVari
     Program, LiteralNumberExpr, CaseExpr, CaseBranches, CaseBranch, ExprLambda, LiteralConstructorExpr
 from parser import Parser
 
-from flecha_exception import FlechaLangException
-
-from src.flecha_exception import FlechaExceptionType
+from flecha_exception import FlechaLangException, FlechaExceptionType
 
 
 class ParserTest(unittest.TestCase):
@@ -199,16 +197,17 @@ class ParserTest(unittest.TestCase):
 
         self.assertEqual(ast_apply, actual_ast)
 
-    def test09_cuando_se_analiza_una_expresion_con_un_caracter_desconocido_se_levanta_una_excepcion_de_analisis_lexico(self):
+    def test09_cuando_se_analiza_una_expresion_con_un_caracter_desconocido_se_levanta_una_excepcion_de_analisis_lexico(
+            self):
         with self.assertRaises(FlechaLangException) as context:
             Parser().parse("""def x = if ' then ' else ' """)
-        self.assertEqual(context.exception.args[0], FlechaExceptionType.LEXICAL_ANALYSIS.value)
+        self.assertEqual(str(context.exception), "[Error lexico] Caracter desconocido" + """ "'" """ + "| En la linea: 1")
 
-    def test10_cuando_se_analiza_una_expresion_valida_con_caracter_inesperado_se_levanta_una_excepcion_de_analisis_sintactico(self):
+    def test10_cuando_se_analiza_una_expresion_valida_con_caracter_inesperado_se_levanta_una_excepcion_de_analisis_sintactico(
+            self):
         with self.assertRaises(FlechaLangException) as context:
             Parser().parse("def es_par x = if x/2 == 0 then True else False|")
-        self.assertEqual(context.exception.args[0], FlechaExceptionType.LEXICAL_ANALYSIS.value)
-
+        self.assertEqual(str(context.exception), "[Error sintactico] Caracter inesperado" + """ '|' """ + "| En la linea: 1")
 
 
 if __name__ == '__main__':
