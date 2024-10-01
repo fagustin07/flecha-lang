@@ -1,6 +1,7 @@
 from ply.yacc import yacc
 
 from abstract_syntax_tree.expression import FlechaFactoryExpression
+from flecha_exception import FlechaLangException, FlechaExceptionType
 from lexer import Lexer
 
 
@@ -145,7 +146,7 @@ class Parser:
         p[0] = self.__factory.build_else(p[2])
 
     def p_error(self, p):
-        print(f'Syntax error: {p.value!r} | At line: {p.lineno}')
+        raise FlechaLangException(FlechaExceptionType.SYNTACTIC_ANALYSIS,f'Caracter inesperado {p.value[0]!r} | En la linea: {p.lineno}')
 
     def parse(self, input_program):
         output_program = self.__yacc.parse(input_program, lexer=self.__lexer)

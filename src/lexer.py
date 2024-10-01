@@ -2,6 +2,9 @@ import ply.lex as ply_lex
 from ply.lex import Lexer as PlyLexer
 import re
 
+from flecha_exception import FlechaLangException, FlechaExceptionType
+
+
 class Lexer:
     tokens = [
         'DEFEQ', 'SEMICOLON', 'LPAREN', 'RPAREN', 'LAMBDA', 'PIPE', 'ARROW',
@@ -113,8 +116,7 @@ class Lexer:
         t.lexer.lineno += t.value.count('\n')
 
     def t_error(self, t):
-        print(f'Unrecognized character {t.value[0]!r}')
-        t.lexer.skip(1)
+        raise FlechaLangException(FlechaExceptionType.LEXICAL_ANALYSIS, f'Caracter desconocido {t.value[0]!r} | En la linea: {t.lineno}')
 
     def build(self) -> PlyLexer:
         return ply_lex.lex(module=self)
