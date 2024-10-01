@@ -2,7 +2,7 @@ import os
 import json
 import unittest
 
-from src.parser import Parser
+from parser import Parser
 
 
 class TestParser(unittest.TestCase):

@@ -1,9 +1,12 @@
-import os
 import unittest
 
-from src.abstract_syntax_tree.expression import Def, ExprLet, ExprApply, LiteralVariableExpr, FlechaFactoryExpression, \
+from abstract_syntax_tree.expression import Def, ExprLet, ExprApply, LiteralVariableExpr, FlechaFactoryExpression, \
     Program, LiteralNumberExpr, CaseExpr, CaseBranches, CaseBranch, ExprLambda, LiteralConstructorExpr
-from src.parser import Parser
+from parser import Parser
+
+from flecha_exception import FlechaLangException
+
+from src.flecha_exception import FlechaExceptionType
 
 
 class ParserTest(unittest.TestCase):
@@ -71,7 +74,6 @@ class ParserTest(unittest.TestCase):
         actual_ast = parser.parse(input_let)
         self.assertEqual(ast_let, actual_ast)
 
-    # Test para expresiones lambda
     def test04_cuando_se_analiza_una_expresion_lambda_entonces_se_genera_el_ast_correctamente(self):
         input_lambda = """
         def increment =  \\x -> x + 1
@@ -112,7 +114,6 @@ class ParserTest(unittest.TestCase):
 
         self.assertEqual(program, actual_ast)
 
-    # Test para expresiones if-then-else
     def test06_cuando_se_analiza_una_expresion_if_entonces_se_genera_el_ast_correctamente(self):
         input_if = """
         def natural x = if x > 0 then print 1 else print 2
@@ -173,7 +174,6 @@ class ParserTest(unittest.TestCase):
         actual_ast = parser.parse(input_with_comments)
         self.assertEqual(actual_ast, ast_program)
 
-    # Test para expresiones de aplicación
     def test08_cuando_se_analiza_una_expresion_con_parentesis_se_genera_el_ast_correctamente(self):
         input_apply = """
         def init = print (sum 1 2)
@@ -198,6 +198,17 @@ class ParserTest(unittest.TestCase):
         actual_ast = parser.parse(input_apply)
 
         self.assertEqual(ast_apply, actual_ast)
+
+    def test09_cuando_se_analiza_una_expresion_con_un_caracter_desconocido_se_levanta_una_excepcion_de_analisis_lexico(self):
+        with self.assertRaises(FlechaLangException) as context:
+            Parser().parse("""def x = if ' then ' else ' """)
+        self.assertEqual(context.exception.args[0], FlechaExceptionType.LEXICAL_ANALYSIS.value)
+
+    def test10_cuando_se_analiza_una_expresion_valida_con_caracter_inesperado_se_levanta_una_excepcion_de_analisis_sintactico(self):
+        with self.assertRaises(FlechaLangException) as context:
+            Parser().parse("def es_par x = if x/2 == 0 then True else False|")
+        self.assertEqual(context.exception.args[0], FlechaExceptionType.LEXICAL_ANALYSIS.value)
+
 
 
 if __name__ == '__main__':

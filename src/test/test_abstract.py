@@ -1,5 +1,5 @@
 
-from src.abstract_syntax_tree.ast import AstSequence, AstKind, AstNode, AstLeaf
+from abstract_syntax_tree.ast import AstSequence, AstKind, AstNode, AstLeaf
 import unittest
 
 
